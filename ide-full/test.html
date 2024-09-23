@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material-darker.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 영역 */
+        #header {
+            height: 50px;
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* 메인 컨테이너 (사이드바 포함) */
+        #main-container {
+            flex: 1;
+            display: flex;
+        }
+
+        /* 왼쪽 사이드바 */
+        #left-sidebar {
+            width: 150px;
+            background-color: #1E1E1E;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 오른쪽 사이드바 */
+        #right-sidebar {
+            width: 150px;
+            background-color: #1E1E1E;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 메인 콘텐츠 영역 */
+        #content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 문제 영역과 코드 영역을 4:6으로 나누기 */
+        #problem-code-container {
+            flex: 1;
+            display: flex;
+            height: 100%;
+        }
+
+        #problem-section {
+            width: 40%;
+            background-color: #2b2b2b;
+            color: white;
+            padding: 20px;
+            overflow-y: scroll;
+        }
+
+        #editor-section {
+            width: 60%;
+            background-color: #1E1E1E;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #code-editor {
+            flex: 1;
+            height: 100%;
+            padding: 20px;
+            background-color: #1E1E1E;
+            color: white;
+            border: none;
+            resize: none;
+        }
+
+        /* 터미널 및 콘솔 영역 */
+        #console-area {
+            height: 200px;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .consolemenu-menu {
+            display: flex;
+        }
+
+        .consolemenu-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .consolemenu-item.active {
+            background-color: #444;
+        }
+
+        .consolemenu-content {
+            flex: 1;
+            margin-top: 10px;
+        }
+
+        /* 점수 및 타이머 스타일 */
+        .minimal-scoreboard {
+            background-color: #1E1E1E;
+            padding: 10px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            border-bottom: 1px solid white;
+            margin: 10px 0;
+        }
+
+        /* 스킬 바 스타일 */
+        .skill-bar {
+            margin: 20px 0;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .skill-text {
+            margin-left: 10px;
+        }
+
+        .status-dots {
+            display: flex;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #777;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .skill-timer {
+            margin-left: 20px;
+        }
+
+        /* 기타 스타일 */
+        .problemtitle, .problemintitle {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .testcase-container {
+            margin: 10px 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="header">Code Battle IDE</div>
+    
+    <div id="main-container">
+        <!-- 왼쪽 사이드바 -->
+        <div id="left-sidebar">
+            <div class="minimal-scoreboard">
+                <div class="player-name" id="my-name">Player 1</div>
+                <div class="score" id="my-score">2</div>
+                <div class="divider"></div>
+                <div class="timer" id="timer">1:07</div>
+                <span id="nextdrop">charge in.. 5s</span>
+            </div>
+        </div>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <div id="content">
+            <div id="problem-code-container">
+                <!-- 문제 영역 -->
+                <div id="problem-section">
+                    <div class="problemtitle">문제</div>
+                    <div id="problem-description">이러저러하고 이러저러한 문제이다</div>
+                    <div class="problemintitle">입력</div>
+                    <div id="problem-input-format">이러저러한 입력이 이러저러한 형식으로 들어온다</div>
+                    <div class="problemintitle">출력</div>
+                    <div id="problem-output-format">이러저러한 출력이 이러저러한 형식으로 나간다</div>
+                    <hr>
+                    <div class="problemintitle">테스트케이스</div>
+                    <div id="test-cases">
+                        <div class="testcase-container">
+                            <div class="testcase-title">예제 입력</div>
+                            <div class="testcase-content">이러저러한 입력</div>
+                        </div>
+                        <div class="testcase-container">
+                            <div class="testcase-title">예제 출력</div>
+                            <div class="testcase-content">깔@쌈한 출력</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 코드 편집 영역 -->
+                <div id="editor-section">
+                    <textarea id="code-editor" maxlength="5000"></textarea>
+                </div>
+            </div>
+
+            <!-- 콘솔 영역 -->
+            <div id="console-area">
+                <div class="consolemenu-menu">
+                    <span class="consolemenu-item active">OUTPUT</span>
+                    <span class="consolemenu-item log">INPUT</span>
+                    <span class="consolemenu-item submitted-log">SUBMITTED LOG</span>
+                    <span class="consolemenu-item log">SKILLS</span>
+                </div>
+                <div class="consolemenu-content">
+                    <div class="active" id="my-output">콘솔 출력 영역...</div>
+                    <div id="my-input">
+                        <textarea id="input-field" placeholder="Enter input here..."></textarea>
+                    </div>
+                    <div id="results-container"></div>
+                    <div id="skills"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 사이드바 -->
+        <div id="right-sidebar">
+            <div class="skill-bar">
+                <div class="skill-item">
+                    <img src="../static/asset/lock.svg">
+                    <div class="skill-text">Lockdown</div>
+                    <div class="skill-timer">Time left: 5s</div>
+                </div>
+                <div class="skill-item">
+                    <img src="../static/asset/flashbang.svg">
+                    <div class="skill-text">Flashbang</div>
+                    <div class="skill-timer">Time left: 3s</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

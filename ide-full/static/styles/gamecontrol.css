@@ -1,0 +1,70 @@
+
+/* 풀스크린 모드 */
+.fullscreen-mode {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw !important;
+    max-width: 1200px;
+    height: 94%;
+    z-index: 9999;
+    overflow: auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.blur-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(10px);
+    z-index: 9998;
+    display: none;
+}
+
+.blur-background.active {
+    display: block;
+}
+
+#toggle-fullscreen {
+    border: none;
+    background: transparent;
+    color: gray;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: pretendard;
+}
+
+#toggle-fullscreen:hover {
+    font-weight: bold;
+}
+
+
+.dropdown {
+    font-weight: 800;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 4px;
+    background-color: var(--background_color);
+    color: var(--main_text);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: none;
+}
+
+.dropdown:focus {
+    outline: none;
+    border-color: #4563EB;
+}
+
+.dropdown option {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--main_text);
+    border: none;
+}

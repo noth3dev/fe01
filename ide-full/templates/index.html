@@ -1,0 +1,3103 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+
+    <link rel="stylesheet" href="../static/styles/styles.css">
+    <link rel="stylesheet" href="../static/styles/animation.css">
+    <link rel="stylesheet" href="../static/styles/overlay.css">
+    <link rel="stylesheet" href="../static/styles/skillsoperation.css">
+    <link rel="stylesheet" href="../static/styles/viper.css">
+    <link rel="stylesheet" href="../static/styles/gamecontrol.css">
+    <link rel="stylesheet" href="../static/styles/custom-dark-theme.css">    
+
+
+    <link rel="icon" type="image/x-icon" href="../static/asset/FAVICON.svg">
+    <style>
+
+        /* 배경 이미지 및 스타일 */
+body {
+    background-image: url('../asset/background/monochrome.webp'); /* Adjust the path as necessary */
+    background-size: cover; /* Cover the entire page */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url('../static/asset/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: -1;
+    opacity: 0.7;
+    background-color: rgba(0, 0, 0, 0.99);
+}
+
+.container{
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+
+
+/* 상태 및 게임 관련 */
+.background-fade-in {
+    animation: backgroundFade 2s forwards;
+}
+
+.body {
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+
+.body::-webkit-scrollbar {
+    display: none; 
+}
+
+.circle-background, .circle-foreground {
+    fill: none;
+    stroke-width: 10;
+}
+
+.circle-background {
+    stroke: rgba(255, 255, 255, 0.2); 
+}
+
+.circle-foreground {
+    stroke: white; 
+    stroke-linecap: round;
+    transform: rotate(-90deg); 
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.1s linear; 
+}
+
+.circle-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+/* 버튼 및 인터페이스 스타일 */
+.continue-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #000;
+    border: 3px solid #ffffff;
+    color: #fff;
+    border-radius: 25px;
+    cursor: pointer;
+    text-transform: uppercase;
+    outline: none;
+    margin-top: 20px; 
+}
+
+.debuff-box {
+    background-color: rgba(255, 0, 0, 0.9); 
+    color: white;
+    padding: 10px;
+    border-radius: 14px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    z-index: 1000; 
+    transition: opacity 1s ease-in-out; 
+}
+
+.debuff-timer {
+    font-size: 0.9rem;
+    margin-left: 15px;
+}
+
+.glowing-inset-border {
+    animation: insetGlowEffect 1.5s infinite;
+    border: 5px solid rgba(255, 0, 0, 0.5); 
+}
+
+.hidden {
+    opacity: 0; 
+}
+
+
+/* 타이머 */
+#countdown-timer {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-size: 1rem;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+    z-index: 1100;
+    display: none; 
+}
+
+/* 라운드 종료 화면 */
+
+/* 오버레이 효과 */
+#stunoverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+    animation: borderFadeIn 3s forwards, flashBangEffect 0.5s forwards 3s, visionBlur 2s forwards 3.5s, fadeBackIn 3s forwards 5.5s;
+    backdrop-filter: blur(20px); 
+}
+
+
+/* 연막 효과 */
+@keyframes slowFog {
+    0% {
+        transform: scale(0);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+}
+
+@keyframes fastExpand {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(5);
+        opacity: 0;
+    }
+}
+
+@keyframes slowFadeOut {
+    0% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes blurEffect {
+    0% {
+        filter: blur(0px);
+    }
+    100% {
+        filter: blur(10px);
+    }
+}
+
+@keyframes unblurEffect {
+    0% {
+        filter: blur(10px);
+    }
+    100% {
+        filter: blur(0px);
+    }
+}
+
+.toxic_cloud-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    pointer-events: none;
+    animation: slowFog 5s ease-in-out forwards, slowFadeOut 20s forwards 20s;
+}
+
+.blur-dot {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(0, 255, 0, 0.7);
+    border-radius: 50%;
+    pointer-events: all;
+    animation: slowFog 5s ease-in-out forwards, slowFadeOut 20s forwards 20s;
+}
+
+/* 글자 수 애니메이션 */
+#character-count-container {
+    display: flex;
+    justify-items: center;
+    gap: 10px;
+    margin-bottom: 0px;
+    align-items: center;
+}
+
+@keyframes growAndShrink {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+#my-character-count {
+    color: #0f62fe;
+}
+
+#opponent-character-count {
+    color: var(--negative);
+}
+
+.animate-count {
+    display: inline-block;
+    animation: growAndShrink 0.2s ease-in-out;
+}
+
+
+body {
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 1s ease-out, opacity 1s ease-out;
+    overflow: hidden;
+}
+
+body.loaded {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* 기본 색상 설정 */
+:root {
+    --background_color: #121212;
+    --main_text: #f0f8ff;
+    --negative: #fa4d56;
+    --positive: #00C457;
+    --sub_bg: #23262A;
+    --sub_text: gray;
+    --tier_bronze: #975936;
+    --tier_conqueror: #DA092F;
+    --tier_diamond: #9902B2;
+    --tier_emerald: #02B50A;
+    --tier_gold: #fd9900;
+    --tier_iron: #A0A0A0;
+    --tier_lumen: #4563EB;
+    --tier_platinum: #07C0D9;
+    --tier_silver: #c0c0c0;
+    --white2: #fbfbf9;
+}
+/*
+:root {
+    --main_text: #f0f8ff;
+    --negative: #f78c6c;
+    --positive: #07c0d9;
+    --sub_bg: #23262A;
+    --sub_text: gray;
+    --white2: #fbfbf9;
+}
+
+*/
+.area{
+    width: 78%;
+    left: 11%;
+    top: 6%;
+    height: 94%;
+    z-index: 1000;
+    position: fixed;
+    display: flex;
+    z-index: 0;
+}
+    .container { 
+    left: 10%;
+    width: 80%;
+    height: 70%;
+    background-color: var(--background_color);
+    display: flex;
+    flex-direction: row;
+    position: fixed;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+.topbar{
+    width: 100%;
+    height: 6%;
+    border-bottom: #444444 1px solid;
+    z-index: 1;
+    top: 0;
+        background-color: #141414;
+        color: white;
+    text-align: center; /* 텍스트 중앙 정렬 */
+    font-size: 1rem; /* 텍스트 크기 */
+    box-sizing: border-box; /* 패딩 포함 너비 계산 */
+        position: fixed;
+        box-shadow: inset 0 0 0 1px #444444;
+}
+
+
+
+    .sidebar-left, .sidebar-right {
+        width: 12%;
+        background-color: #141414;
+        color: white;
+        position: fixed;
+        height: 95%;
+        top: 5%;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px #444444;
+    }
+    .sidebar-left{
+        left: 0%;
+    }
+    .sidebar-right{
+        right: 0%;
+        align-items: center;
+    }
+    .matchinfo {
+    display: flex;
+    align-items: center;      /* 수직 중앙 정렬 */
+    height: 60px;
+    background-color: #171717;
+    box-shadow: inset 0 0 0 1px #444444;
+}
+
+.matchinfoinner {
+    display: flex;
+    margin: 10px;
+    position: absolute;
+}
+.icon {
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+}
+
+.icon img {
+    width: 25px;
+    height: auto;
+    object-fit: cover;
+}
+
+.text-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.title {
+    font-family: pretendard;
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+}
+.matchid{
+    font-family: pretendard;
+    font-weight: 800;
+    font-size: 8px;
+    color: gray;
+}
+.description {
+    font-family: pretendard;
+    font-weight: 400;
+    font-size: 8px;
+    color: gray;
+}
+
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #282c34;
+        color: white;
+    }
+    .left-inner{
+        top: 40%;
+        position: fixed;
+    }
+
+    .problem-section {
+        flex: 4;
+        background-color: #212121;
+        width: 30%;
+        overflow: auto; /* 스크롤을 가능하게 유지하되 */
+    scrollbar-width: none; /* 파이어폭스에서 스크롤바 숨기기 */
+    box-shadow: inset 0 0 0 1px #444444;
+    }
+    .problem-section::-webkit-scrollbar {
+    display: none; /* 웹킷 기반 브라우저에서 스크롤바 숨기기 */
+}
+
+    .editor-section {
+        flex: 6;
+        background-color: #1f1f1f;
+        width: 50%;
+    }
+    .rounds {
+    display: flex;
+    justify-content: center; /* 왼쪽 정렬 */
+    gap: 10px; /* 사각형 간 간격 */
+    margin-top: 10px;
+}
+
+.round {
+    width: 20px;
+    height: 20px;
+    background-color: #333;
+    border-radius: 5px;
+}
+.round.won{
+    background-color: var(--positive);
+}
+.round.lost{
+    background-color: var(--negative);
+}
+
+.sidebar-menu {
+    margin-top: 380px; /* matchinfo의 높이만큼 여백을 추가 */
+    position: fixed;
+    width: 100%;
+}
+
+.menu-item {
+    display: block;
+    padding: 15px 20px;
+    color: #fff;
+    cursor: pointer;
+    font-family: pretendard;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 5px;
+    border-radius: 8px;
+}
+
+
+.icon img {
+    width: 20px;
+    height: 20px;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.menu-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.menu-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--main_text);
+}
+
+.menu-description {
+    font-size: 12px;
+    color: #333;
+}
+
+@keyframes flashBangEffect {
+    0% {
+        background-color: rgba(255, 255, 255, 1);
+    }
+    100% {
+        background-color: rgba(255, 255, 255, 0);
+    }
+}
+
+@keyframes motionBlur {
+    0% {
+        filter: blur(0px);
+    }
+    100% {
+        filter: blur(10px);
+    }
+}
+
+@keyframes fadeBackIn {
+    0% {
+        opacity: 0;
+        filter: blur(10px);
+    }
+    100% {
+        opacity: 1;
+        filter: blur(0px);
+    }
+}
+
+
+.solved-list {
+    list-style-type: none;
+    padding: 0;
+    margin-left: 15px;
+    position: relative; /* 다른 요소와 겹치지 않게 설정 */
+    font-size: 12px;
+    color: #666;
+    max-height: 150px; /* 최대 높이 설정 */
+    overflow-y: auto; /* 스크롤 가능하게 설정 */
+}
+
+.solver-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.solved-record {
+    margin-top: 10px;
+}
+.solved-list li {
+    margin-bottom: 5px;
+}
+
+.solver-name {
+    font-weight: bold;
+    color: #333;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #0e0e0e;
+    color: #d4d4d4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 문제 섹션 */
+.problem-section {
+    padding: 20px;
+    background-color: 212121;
+    color: var(--white2);
+    overflow-y: auto;
+    flex: 0 0 40%;
+    box-sizing: border-box;
+    font-family: Pretendard;
+}
+
+.editor-section {
+    background-color: var(--background_color);
+    flex: 0 0 60%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.editor-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    
+    background-color: #1B1D20;
+}
+
+.resize-handle {
+    height: 5px;
+    background: transparent;
+    cursor: ns-resize; /* 상하로 드래그 가능한 커서 */
+    width: 100%;
+    position: relative;
+}
+
+
+.console-area {
+    height: 30%;
+    min-height: 30%;
+    width: 100%;
+    background-color: #1B1D20;
+    color: #d4d4d4;
+    overflow-y: auto;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.consolemenu-menu {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 20px;
+    position: sticky;
+    top: 0;
+    width: 100%;
+}
+
+.consolemenu-item {
+    transition: ease-in-out 0.2s;
+    position: relative;
+    margin-right: 13px;
+    color: #fff;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 5px 8px;
+}
+
+.consolemenu-item.active::before {
+    background-color: #4563eb;
+}
+
+.consolemenu-item.active {
+    color: #fff;
+    border-bottom: #4563EB 1px solid;
+}
+
+.consolemenu-content {
+    background-color: #1B1D20;
+    color: #d4d4d4;
+    padding: 20px;
+    height: 300px;
+    overflow-y: auto;
+}
+
+.CodeMirror {
+    flex: 1;
+    height: auto;
+    border: none;
+    color: #d4d4d4;
+    font-size: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    max-height: 369px;
+    font-weight: lighter;
+    font-family: Consolas;
+    background-color: #151515 !important;
+}
+
+.CodeMirror-gutters {
+    background-color: #151515 !important;
+    border: none;
+}
+
+p {
+    line-height: 1.6;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #3e3e42;
+    border-radius: 5px;
+}
+
+.console-head {
+    width: 100%;
+    height: 45px;
+    background-color: #23262A;
+    border-radius: 0%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.console-head-inner {
+    margin-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.xp {
+    margin-left: 5px;
+    color: var(--main_text);
+    font-size: 15px;
+}
+
+.xpadd {
+    margin-left: 5px;
+    color: var(--sub_text);
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+.txt-head {
+    width: 100%;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--main_text);
+    background: rgba(0, 10, 10, 0.01);
+    border-top-left-radius: 15px;
+    backdrop-filter: blur(18.40px);
+    padding-left: 30px;
+    box-sizing: border-box;
+}
+
+.typed {
+    font-size: 10px;
+    color: gray;
+    margin-top: 3px;
+    position: static; /* Removes the fixed positioning */
+}
+
+.right-icons {
+    display: flex;
+    gap: 10px;
+    margin-right: 40px;
+    font-weight: 300;
+}
+
+.right-icons button {
+    margin-right: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    outline: none;
+    border: none;
+    color: var(--main_text);
+    cursor: pointer;
+}
+
+.right-icons button:hover {
+    color: #4563EB;
+    background-color: rgba(0, 100, 100, 0.01);
+}
+
+.consolemenu-content > div {
+    display: none;
+}
+
+.consolemenu-content > .active {
+    display: block;
+}
+
+.consolemenu-menu {
+    background: rgba(0, 0, 0, 0.01);
+    backdrop-filter: blur(18.40px);
+}
+
+.round-container {
+    display: flex;
+    align-items: center;
+    margin-right: 0px;
+    font-weight: 500;
+}
+
+.round-container span {
+    margin-right: 10px;
+    font-size: 1em;
+}
+
+.status {
+    color: white;
+}
+
+.status.win {
+    color: #00C457;
+}
+
+.status.lose {
+    color: white;
+}
+
+.status.miss {
+    color: #4563EB;
+}
+
+.problemtitle {
+    margin-top: 10px;
+    font-family: Pretendard;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white2);
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.problemtitlesource {
+    font-family: Pretendard;
+    font-size: 8px;
+    font-weight: 500;
+    color: var(--sub_text);
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.problemintitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white2);
+    font-family: Pretendard;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.problemintitle span {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--white2);
+    word-wrap: break-word;
+}
+
+.testcase-container {
+    display: flex;
+    gap: 40px;
+}
+
+.testcase-box {
+    background-color: #f7f7fc; /* 부드러운 배경색 */
+    border-radius: 12px; /* 더 둥근 모서리 */
+    border: none;
+    padding: 20px;
+    width: 98%;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease, transform 0.3s ease; /* 박스에 호버 효과 추가 */
+    margin-top: 20px;
+    border: 1px solid #ddd; /* 얇은 테두리 */
+    font-family: 'Pretendard', sans-serif; /* 글꼴 스타일 */
+}
+
+.testcase-box:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); /* 호버 시 더 진한 그림자 */
+    transform: scale(1.01); /* 살짝 확대되는 효과 */
+}
+
+.testcase-box .testcase-title {
+    font-size: 18px; /* 제목의 크기 확대 */
+    font-weight: bold; /* 강조된 텍스트 */
+    color: #333; /* 진한 색상 */
+    margin-bottom: 10px;
+}
+
+.testcase-box .testcase-content {
+    font-size: 14px; /* 본문 텍스트 크기 */
+    color: #666; /* 부드러운 회색 텍스트 */
+    line-height: 1.6; /* 가독성을 위한 줄 간격 */
+}
+
+.testcase-box.success {
+    background-color: #e6f9f0; /* 성공일 때의 배경색 */
+    border-left: 5px solid #2ecc71; /* 성공을 나타내는 녹색 테두리 */
+}
+
+.testcase-box.fail {
+    background-color: #ffe6e6; /* 실패일 때의 배경색 */
+    border-left: 5px solid #e74c3c; /* 실패를 나타내는 빨간 테두리 */
+}
+
+.testcase-box .status-icon {
+    float: right;
+    font-size: 20px;
+    color: #2ecc71; /* 성공: 녹색 */
+}
+
+.testcase-box.fail .status-icon {
+    color: #e74c3c; /* 실패: 빨간색 */
+}
+
+.testcase-display {
+    background-color: #3e3e3e;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 300px;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+    margin-top: 20px;
+}
+
+.testcase-box:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.testcase-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.testcase-content {
+    font-size: 13px;
+    font-weight: 300;
+    white-space: pre-wrap;
+}
+
+/* 입력 필드 스타일 */
+.input-container {
+    z-index: 10;
+    background-color: #1B1D20;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    height: 200px;
+}
+
+.input-label {
+    display: block;
+    font-size: 12px;
+    color: var(--main_text);
+    margin-bottom: 5px;
+    outline: none;
+}
+
+#input-field {
+    width: 90%;
+    height: 100px;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--main_text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    padding: 5px;
+    resize: none;
+    outline: none;
+    border: none;
+}
+
+#input-field::placeholder {
+    color: var(--sub_text);
+}
+
+/* 테스트 케이스 박스 */
+.output-box, .input-box {
+    background-color: #2e2e2e;
+    border: 1px solid #4a4a4a;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 10px;
+    color: #d4d4d4;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+.testcase-box {
+    background-color: #2e2e2e;
+    border: 1px solid #4a4a4a;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+    color: #d4d4d4;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.testcase-box:hover {
+    background-color: #3e3e3e;
+}
+
+.testcase-box {
+    color: var(--background_color);
+}
+
+/* 상대방 플레이어 스타일 */
+#opponent-player {
+    font-weight: 800;
+}
+
+            #countdown{
+                font-size: 50px;
+                font-weight: 900;
+                font-family: pretendard;
+                color: gray;
+            }   
+            .semititle{
+                font-size: 20px;
+                font-family: pretendard;
+            }
+            .minimal-scoreboard {
+            position: absolute;
+            top: 0%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            padding: 10px 20px;
+            font-family: 'pretendard', sans-serif;
+            font-size: 15px;
+            border-radius: 20px;
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width:30%;
+            height: 5%;
+        }
+
+        /* 플레이어 이름 스타일 */
+        .player-name {
+            flex: 1;
+            font-weight: 600;
+            text-align: center;
+            padding: 0 10px;
+            font-size: 16px;
+        }
+
+        /* 양쪽 스코어 스타일 */
+        .score {
+            flex: 1;
+            font-weight: 900;
+            text-align: center;
+            font-size: 25px;
+        }
+
+        /* 가운데 타이머 스타일 */
+        .timer {
+            flex: 1;
+            font-weight: 900;
+            text-align: center;
+            padding: 5px 10px;
+        }
+
+        /* 스코어와 타이머 사이에 구분선 */
+        .divider {
+            width: 1px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.6); /* 반투명한 구분선 */
+        }
+        #my-score{
+            color: #4563eb;
+        }
+        #opponent-score{
+            color: var(--negative);
+        }
+        #nextdrop{
+            font-weight: 400;
+            font-size: 10px;
+        }
+
+        .CodeMirror-cursor {
+  border-left: 1px solid red;  /* 커서 색상 */
+}
+
+
+/* ESC 오버레이 */
+.escoverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+}
+
+.escoverlay-content {
+    background: transparent;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    width: 200px;
+    height: 400px;
+    overflow: hidden;
+    font-family: pretendard;
+}
+
+.escoverlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.button-container, .surrender-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.menu-button {
+    padding: 8px 13px;
+    font-size: 16px;
+    border: none;
+    border-radius: 1px;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.menu-button:hover {
+    background: transparent;
+    color: #4563eb;
+}
+
+.surrender-container {
+    opacity: 0;
+    transform: translateY(100%);
+    display: none;
+}
+
+.surrender-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.surrender-container.show {
+    opacity: 1;
+    transform: translateY(0);
+    display: flex;
+}
+
+.gap {
+    height: 30%;
+}
+
+/*round-end*/
+.letter {
+    display: inline-block;
+    opacity: 0;
+    transform: rotateY(90deg);
+    animation: letterAnimation 0.5s forwards ease-in-out;
+}
+
+.lose {
+    font-size: 3rem;
+    color: var(--negative);
+    text-shadow: 0 0 10px rgba(250, 77, 86, 0.5);
+    font-weight: 800;
+    display: inline-block;
+    opacity: 0;
+    animation: fadeIn 2s forwards, textAnimation 2s forwards;
+}
+
+.win {
+    font-size: 3rem;
+    color: #0f62fe;
+    text-shadow: 0 0 10px rgba(15, 98, 254, 0.5);
+    font-weight: 800;
+    display: inline-block;
+    opacity: 0;
+    animation: fadeIn 2s forwards, textAnimation 2s forwards;
+}
+
+.subtext {
+    font-size: 1rem;
+    color: gray;
+    margin-bottom: 1rem;
+    text-align: center; 
+}
+
+.subsubtext {
+    font-size: 0.6rem;
+    color: rgb(59, 59, 59);
+    margin-bottom: 1rem;
+    text-align: center; 
+}
+
+.new-content {
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+}
+
+.new-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(-100%);
+}
+
+.new-screen.slide-down {
+    animation: slideDown 2s forwards ease-out;
+    opacity: 1;
+}
+
+.roundend-transition {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    text-align: center;
+}
+
+.roundend-transition.active {
+    opacity: 1;
+}
+
+.roundend-transition.exit {
+    animation: fadeOut 2s forwards, textExitAnimation 2s forwards;
+}
+
+#roundendScreen {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: -1;
+    backdrop-filter: blur(10px); 
+}
+
+/* 툴팁 스타일 */
+/* 툴팁 스타일 */
+.tooltip {
+    position: absolute;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-top: 70px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    animation: fadeIn 0.1s forwards ease;
+}
+
+/* 툴팁 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(50%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+
+
+
+#submit-timer-display{
+    color: gray;
+    font-size: 10px;
+}
+
+#skills{
+    margin-top: 450px;
+    position: fixed;
+    margin-left: 30px;
+}
+
+.skill-bar {
+    display: flex;
+    flex-direction: column;  
+    align-items: center;  
+    justify-content: center;  
+    color: white;
+    text-align: center;  
+    gap: 50%;
+    margin-top: 30px; 
+}
+
+.skill-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #35393F;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 6px;
+    transition: 0.6s ease-in-out;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+.skill-icon.disabled {
+    opacity: 0.5;
+    pointer-events: none;  
+    cursor: not-allowed;
+}
+
+.skill-icon:hover {
+    background-color: #FFFFFF;
+}
+
+.skill-icon:hover img {
+    filter: brightness(0.2) sepia(1) saturate(0) hue-rotate(0deg); 
+}
+
+.skill-icon img {
+    transition: filter 0.3s ease;
+    width: 25px;
+    height: 25px;
+}
+
+.skill-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;  
+    justify-content: center;  
+    color: white;
+    text-align: center; 
+    width: 110px;
+}
+
+.skill-subtext {
+    font-size: 10px;
+    color: gray;
+}
+
+.skill-text {
+    margin-top: -20px;
+    font-size: 14px;
+}
+
+.skill-timer {
+    font-size: 9px;
+    color: gray;
+    margin-top: 5px;
+}
+
+/* 상태 점 스타일 */
+.status-dot {
+    width: 7px;
+    height: 7px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.status-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px; 
+    margin-bottom: 30px; 
+}
+#toggle-fullscreen{
+    position: sticky;
+    top: 0;
+    background-color: #212121;
+    margin-top: -15px;
+    border-radius: 1px;
+}
+#buy-submit-btn{
+    background: transparent;
+    outline: none;
+    border: none;
+    color: #fff;
+    font-size: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+#buy-submit-btn:hover{
+    color: gray;
+}
+        </style>
+</head>
+<body>
+    <div id="roundendScreen" class="roundend-transition">
+        <div class="subtext">SHAKE UP THE CODE.</div>
+
+        <div id="resultText" class="win"></div>
+    </div>
+    
+    <div id="escoverlay" class="escoverlay">
+        <div class="escoverlay-content">
+          <h2 id="menu-title">SHAKECODE</h2>
+          <hr>
+          <!-- Initial Button Container -->
+          <div id="button-container" class="button-container">
+            <button id="continue-btn" class="menu-button">Continue</button>
+            <button id="settings-btn" class="menu-button">Settings</button>
+            
+            <div class="gap"></div>
+            <button id="exit-game-btn" class="menu-button">Exit Game</button>
+            <button id="exit-lobby-btn" class="menu-button">Exit to Lobby</button>
+            <select class="dropdown" id="language-selector">
+                <option value="text/x-csrc">C</option>
+                <option value="text/x-python">Python</option>
+                <option value="text/x-c++src">C++</option>
+                <option value="text/x-java">Java</option>
+            </select>
+          </div>
+      
+          <!-- Surrender Prompt -->
+          <div id="surrender-container" class="surrender-v">
+            <p id="surrender-text">Would you surrender?</p>
+            <div class="subtext">you will lose more points and get penalty</div>
+            <div class="surrender-buttons">
+              <button id="confirm-surrender-btn" class="menu-button">Yes</button>
+              <button id="cancel-surrender-btn" class="menu-button">No</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      
+
+    <div id="stunoverlay">
+        <div id="countdown-timer" style="font-size: 2rem; color: white;">Stun ends in: 5s</div>
+    </div>
+
+
+    <div id="math-problem-modal">
+        <div id="timer-display" style="margin-top:0px; color:red;">Time left: 10s</div> <!-- 타이머 표시 -->
+        <div id="math-problem-question"></div>
+        <input type="text" id="math-problem-answer" placeholder="Enter answer">
+        <button class="decaybutton" onclick="submitMathProblem()">Submit</button>
+        
+    </div>
+    
+    
+
+    <div class="topbar">
+        <div class="rounds">
+            <div class="round"></div>
+            <div class="round"></div>
+            <div class="round"></div>
+            <div class="round"></div>
+            <div class="round"></div>
+        </div>
+    </div>
+        <div class="sidebar-left">
+            <div class="matchinfo">
+                <div class="matchinfoinner">
+                <div class="text-content">
+                    <span class="title">RANKED</span>
+                    <span class="description">
+                        <span class="matchid">
+                            Match id : 
+                        </span>
+                        
+                        64dvR0jhgtre1hgfrew
+                        
+                    </span>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <div class="icon">
+                        <img src="../static/asset/opponent.svg" alt="Icon">
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title" id="opponent-player">Yeonfish 6040</span>
+                        <span class="menu-description">opponenet</span>
+                    </div>
+                </li>
+                <li class="menu-item">
+                    <div class="icon">
+                        <img src="../static/asset/timer.svg" alt="Icon">
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">1:00</span>
+                        <span class="menu-description">stopwatch</span>
+                    </div>
+                </li>
+                <li class="menu-item">
+                    <div class="icon">
+                        <img src="../static/asset/clip.svg" alt="Icon">
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title" id="solved-problem-count">5</span>
+                        <span class="menu-description">Round passed</span>
+                    </div>
+                </li>
+                <li class="menu-item">
+                    <div class="icon">
+                        <img src="../static/asset/token.svg" alt="Icon">
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title" id="skillpointdrop">5</span>
+                        <span class="menu-description">Next point drop</span>
+
+                    </div>
+
+                </li>
+                <li class="solved-record">
+                    <ul class="solved-list">
+                        <li>Problem 1 - <span class="solver-name">User A</span></li>
+                        <li>Problem 2 - <span class="solver-name">User B</span></li>
+                        <li>Problem 3 - <span class="solver-name">User A</span></li>
+                    </ul>
+                </li>
+                <!-- 다른 메뉴 항목들 추가 -->
+            </ul>
+            
+            
+            
+
+            </div>
+            </div>
+                
+            <!-- 여기에 점수, 타이머 등 추가    -->
+             <div class="left-inner">
+                
+                <div class="minimal-scoreboard">
+                    <div class="player-name" id="my-name">Player 1</div> <!-- 좌측 플레이어 이름 -->
+                    <div class="score" id="my-score">2</div>
+                    <div class="divider"></div>
+                    <div class="score" id="opponent-score">4</div>
+                    <div class="player-name">Player 2</div> <!-- 우측 플레이어 이름 -->
+                </div>
+                </div>
+            <p>Left Sidebar</p>
+        </div>
+    <div class="area">
+        <div class="problem-section">
+            <button id="toggle-fullscreen">전체 화면 전환</button>
+
+
+            <div id="debuff-container" style="position: fixed; top: 10px; left: 10px; z-index: 1000;">
+
+            </div>
+
+            <div class="problemtitle">
+                <img src="../static/asset/logo_casual.svg" width="16px">
+                <span id="problem-title">이러저러한 이름</span>
+            </div>
+            <div class="problemtitlesource">
+                <span id="problem-source">이러저러한 출처</span>
+            </div>
+            <hr>
+            <div class="problemintitle">문제<br>
+                <span id="problem-description">이러저러하고 이러저러한 문제이다</span>
+            </div>
+            <div class="problemintitle">입력<br>
+                <span id="problem-input-format">이러저러한 입력이 이러저러한 형식으로 들어온다</span>
+            </div>
+            <div class="problemintitle">출력<br>
+                <span id="problem-output-format">이러저러한 출력이 이러저러한 형식으로 나간다</span>
+            </div>
+            <div class="problemintitle">테스트케이스<br>
+                <span id="test-cases">
+                    <div class="problemintitle" style="font-size: 14px;">테스트케이스 1:<br></div>
+                    <div class="testcase-container">
+                        <div class="testcase-display">
+                            <div class="testcase-title">예제 입력</div>
+                            <div class="testcase-content input-content">이러저러한 입력</div>
+                        </div>
+                        <div class="testcase-display">
+                            <div class="testcase-title">예제 출력</div>
+                            <div class="testcase-content output-content">깔@쌈한 출력</div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+            <div class="problemintitle">추가 조건<br>
+                <span id="problem-additional-info">
+                    이 문제에는 이러저러한 것에 대한 이러저러한 추가 조건이 있다.<br>
+                    메모리 조건은 이러저러하고, 시간 조건은 이러저러하다.
+                </span>
+            </div>
+            <hr style="margin-top: 30px;">
+            <div class="problemintitle">정보<br>
+                <span>  
+                    <span class="difficulty" id="problem-difficulty">난이도 : ~~</span><br>
+                    <span class="source" id="problem-source-detail">출처: ~~</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="editor-section">
+
+            <div class="editor-area">
+                <div class="txt-head">
+                    <div id="character-count-container">
+                        <div id="my-character-count">0</div>
+                        vs
+                        <div id="opponent-character-count">0</div>
+                        <div class="typed">characters typed</div>
+
+                    </div>
+                    <div class="right-icons">
+                        <button id="buy-submit-btn" onclick="buySubmit()">Buy Submit (2 Skill Points)</button>
+
+                        <button onclick="runCode()">Test</button>
+                        <button id="submit-all" onclick="handleSubmit()">Submit</button>
+                    </div>
+                </div>
+                <textarea id="code-editor" maxlength ="5000">ggs</textarea>
+
+            <div class="console-head">
+                <div class="console-head-inner">
+                    <div style="display: flex;">
+                        <img src="../static/asset/submit.svg" width="20px">
+                        <div class="xp" id="submit-count-display">5</div>
+                        <div class="xpadd">submit left</div>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="console-area">
+                <div class="resize-handle"></div>   
+                <div class="consolemenu-menu">
+                    <span class="consolemenu-item active">OUTPUT</span>
+                    <span class="consolemenu-item log">INPUT</span>
+                    <span class="consolemenu-item submitted-log">SUBMITTED LOG</span>   
+                </div>
+                <div class="consolemenu-content">
+                    <div class="active" id="my-output">console....</div>
+
+                    <div id="my-input">
+                        <textarea id="input-field" placeholder="Enter input here..."></textarea>
+                    </div>
+                    <div id="results-container">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="sidebar-right">
+        <div class="matchinfo">
+            <div class="matchinfoinner">
+                <div class="text-content">
+                    <span class="title" id="toolkit">VIPER</span>
+                    <span class="description">
+                        Viper dominate battlefield with one's toxin
+                        
+                    </span>
+                    
+                </div>
+        </div>
+        <div id="skills">
+            <div class="status-dots" id="total-status-dot">
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+                <div class="status-dot"></div>
+            </div>
+
+            <div class="skill-bar" id="warden-skill-bar">
+                <div class="skill-item">
+                    <div class="skill-icon" onclick="useSkill('disable_submit')" id="lockdown-icon">
+                        <img src="../static/asset/lock.svg">
+                    </div>
+                    <div class="status-dots" id="lockdown-status-dot">
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="skill-text">Lockdown</div>
+                    <div class="skill-subtext">Lock down opponent's runcode/skills</div>
+                    <div id="disable_submit_timer" class="skill-timer"></div> <!-- 남은 시간 표시 -->
+                </div>
+
+                <!-- 두 번째 스킬 -->
+                <div class="skill-item">
+                    <div class="skill-icon" onclick="useSkill('disable_typing')" id="flashbang-icon">
+                        <img src="../static/asset/flashbang.svg">
+                    </div>
+                    <div class="status-dots" id="flashbang-status-dot">
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="skill-text">Flashbang</div>
+                    <div class="skill-subtext">Flash enemy and stun for short time</div>
+                    <div id="disable_typing_timer" class="skill-timer"></div> <!-- 남은 시간 표시 -->
+                </div>
+
+            </div>
+            <div class="skill-bar" id="viper-skill-bar">
+                
+                <div class="skill-item">
+                    <div class="skill-icon" onclick="useSkill('decay')" id="decay-icon">
+                        <img src="../static/asset/viper.svg">
+                    </div>
+                    <div class="status-dots" id="decay-status-dot">
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="skill-text">Decay</div>
+                    <div class="skill-subtext">Gradually erodes code til they solve the problem</div>
+                    <div id="decay_timer" class="skill-timer" style="visibility: hidden;"></div> 
+                </div>    
+                <div class="skill-item">
+                    <div class="skill-icon" id="toxic_cloud-icon" onclick="useSkill('toxic_cloud')">
+                        <img src="../static/asset/toxic_cloud.svg">
+                    </div>
+                    <div class="status-dots" id="toxic_cloud-status-dot">
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="skill-text">Toxic cloud</div>
+                    <div class="skill-subtext">Smoke and blind enemy's screen</div>
+                    <div id="toxic_cloud_timer" class="skill-timer"></div> <!-- 남은 시간 표시 -->
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.6/addon/edit/closebrackets.min.js"></script>
+    <script src="../static/script.js"></script>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>// 라운드 결과 배열 (현재까지 3개의 라운드 결과)
+const maxSubmitCount = 5; // 최대 제출 기회
+const skillPointsPerSubmit = 2; // 제출 기회 1개를 얻기 위한 스킬 포인트
+
+// 스킬 포인트로 제출 기회 구매하는 함수
+function buySubmit() {
+    const buySubmitBtn = document.getElementById('buy-submit-btn');
+    const submitButton = document.getElementById("submit-all");
+
+    if (currentSkillPoints >= skillPointsPerSubmit && submitCount < maxSubmitCount) {
+        currentSkillPoints -= skillPointsPerSubmit; // 스킬 포인트 2개 감소
+        submitCount++; // 제출 기회 1개 증가
+        updateSubmitCountUI(); // 제출 기회 UI 업데이트
+        updateSkillPointsUI(); // 스킬 포인트 UI 업데이트
+
+        // 제출 기회가 1 이상일 경우 제출 버튼 활성화
+        if (submitCount > 0) {
+            submitButton.disabled = false;  // 버튼 활성화
+            submitButton.style.opacity = 1; // 투명도 복구
+            submitButton.style.cursor = 'pointer'; // 커서 복구
+        }
+    } else {
+        // 스킬 포인트 부족 또는 제출 기회 최대일 때 버튼 텍스트 변경
+        let originalText = buySubmitBtn.textContent;
+        if (currentSkillPoints < skillPointsPerSubmit) {
+            buySubmitBtn.textContent = 'Not enough skill points!';
+        } else if (submitCount >= maxSubmitCount) {
+            buySubmitBtn.textContent = 'Max submit count reached!';
+        }
+
+        // 커서를 금지된 모양으로 설정
+        buySubmitBtn.style.cursor = 'not-allowed';
+
+        // 2초 후 버튼 텍스트와 커서 스타일을 원래대로 복구
+        setTimeout(() => {
+            buySubmitBtn.textContent = originalText;
+            buySubmitBtn.style.cursor = 'pointer'; // 다시 클릭 가능한 커서로 복구
+        }, 2000);
+    }
+}
+
+function updateSubmitCountUI() {
+    document.getElementById("submit-count-display").textContent = `${submitCount}`;
+}
+
+
+// 라운드 결과 배열 (현재까지 3개의 라운드 결과)
+const roundResults = ['L','W']; // 예: 3라운드까지 완료된 상태
+const problemInfo = [
+    "Problem 1: Hello world",
+    "Problem 2: Subtraction",
+    "Problem 3: Multiplication"
+]; // 각 라운드의 문제 정보를 포함하는 배열
+
+// 현재 문제 추가 (4라운드)
+problemInfo.push("Problem 4: A+B");
+// 푼 문제 수를 배열의 길이로 업데이트
+const solvedProblemCount = roundResults.length;
+document.getElementById('solved-problem-count').innerHTML = solvedProblemCount;
+
+// 모든 라운드 박스 요소 가져오기
+const roundBoxes = document.querySelectorAll('.round');
+
+// 툴팁 생성 함수
+function createTooltip(text, backgroundColor) {
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip');
+    tooltip.textContent = text;
+    tooltip.style.backgroundColor = backgroundColor; // 배경색 설정
+    tooltip.style.boxShadow = `0 2px 4px ${backgroundColor}`; // 그림자 색을 배경색과 동일하게 설정
+    document.body.appendChild(tooltip);
+    return tooltip;
+}
+
+// 라운드 결과에 따라 박스 스타일 업데이트
+roundResults.forEach((result, index) => {
+    const roundBox = roundBoxes[index];
+    let backgroundColor = '';
+
+    // 승패에 따른 스타일 적용
+    if (result === 'W') {
+        roundBox.classList.add('won');
+        backgroundColor = '#00C457'; // 승리 시 색상
+        roundBox.style.backgroundColor = backgroundColor;
+    } else if (result === 'L') {
+        roundBox.classList.add('lost');
+        backgroundColor = '#fa4d56'; // 패배 시 색상
+        roundBox.style.backgroundColor = backgroundColor;
+    }
+
+    // 마우스 호버 시 툴팁과 그림자 효과 추가
+    let tooltip;
+    roundBox.addEventListener('mouseenter', function() {
+        roundBox.style.boxShadow = `0 2px 4px ${backgroundColor}`; // 호버 시 배경색과 같은 그림자
+        tooltip = createTooltip(problemInfo[index], backgroundColor); // 툴팁 생성
+        const boxRect = roundBox.getBoundingClientRect();
+        tooltip.style.top = `${boxRect.top - tooltip.offsetHeight - 10}px`; // 박스 위에 툴팁 배치
+        tooltip.style.left = `${boxRect.left + (roundBox.offsetWidth / 2) - (tooltip.offsetWidth / 2)}px`;
+    });
+
+    roundBox.addEventListener('mouseleave', function() {
+        roundBox.style.boxShadow = 'none'; // 마우스 떠났을 때 그림자 제거
+        if (tooltip) {
+            tooltip.remove(); // 툴팁 제거
+        }
+    });
+});
+
+// 현재 진행 중인 라운드 박스 (4번째 라운드)
+const currentRoundBox = roundBoxes[roundResults.length]; // 현재 라운드 박스는 4번째 라운드 (index는 3)
+currentRoundBox.style.position = 'relative'; // 박스 내부에 점을 넣기 위해 상대 위치 설정
+
+// 중앙에 점 찍기
+const dot = document.createElement('div');
+dot.style.width = '8px';
+dot.style.height = '8px';
+dot.style.backgroundColor = '#fff'; // 흰색 점
+dot.style.borderRadius = '50%';
+dot.style.position = 'absolute';
+dot.style.top = '50%';
+dot.style.left = '50%';
+dot.style.transform = 'translate(-50%, -50%)'; // 점을 박스 중앙에 위치시킴
+currentRoundBox.appendChild(dot);
+
+// 현재 라운드에도 호버 시 툴팁 표시
+let tooltip;
+currentRoundBox.addEventListener('mouseenter', function() {
+    tooltip = createTooltip(problemInfo[roundResults.length], '#4563EB'); // 현재 라운드 문제 툴팁 생성
+    const boxRect = currentRoundBox.getBoundingClientRect();
+    tooltip.style.top = `${boxRect.top - tooltip.offsetHeight - 10}px`; // 박스 위에 툴팁 배치
+    tooltip.style.left = `${boxRect.left + (currentRoundBox.offsetWidth / 2) - (tooltip.offsetWidth / 2)}px`;
+});
+
+currentRoundBox.addEventListener('mouseleave', function() {
+    if (tooltip) {
+        tooltip.remove(); // 툴팁 제거
+    }
+});
+
+
+        let istoxic_cloudActive = false;  //
+document.querySelector("button[onclick='runCode()']").addEventListener('click', function() {
+    // 'OUTPUT' 탭을 활성화하고 출력 창을 보이도록 함
+    const outputTab = document.querySelector('.consolemenu-item.active'); // 활성화된 탭 찾기
+    const outputContent = document.querySelector('.consolemenu-content > div.active'); // 활성화된 내용 찾기
+
+    // 기존 활성화된 탭 비활성화
+    if (outputTab) outputTab.classList.remove('active');
+    if (outputContent) outputContent.classList.remove('active');
+
+    // 'OUTPUT' 탭 활성화
+    const outputMenuItem = document.querySelector('.consolemenu-item:first-child'); // 첫 번째 탭인 OUTPUT
+    const outputContainer = document.getElementById('my-output'); // OUTPUT 컨테이너
+
+    outputMenuItem.classList.add('active');
+    outputContainer.classList.add('active');
+});
+
+let submitCount = 5;
+
+  const consoleArea = document.querySelector('.console-area');
+const resizeHandle = document.querySelector('.resize-handle');
+
+resizeHandle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+
+    const initialMouseY = e.clientY;
+    const initialHeight = consoleArea.offsetHeight;
+
+    function resizeConsoleArea(e) {
+        const deltaY = e.clientY - initialMouseY;
+        const newHeight = initialHeight - deltaY; // 위쪽에서 드래그하므로 반대로 계산
+        if (newHeight > 150 && newHeight < window.innerHeight * 0.8) {
+            consoleArea.style.height = `${newHeight}px`;
+        }
+    }
+
+    function stopResizing() {
+        document.removeEventListener('mousemove', resizeConsoleArea);
+        document.removeEventListener('mouseup', stopResizing);
+    }
+
+    document.addEventListener('mousemove', resizeConsoleArea);
+    document.addEventListener('mouseup', stopResizing);
+});
+
+
+document.getElementById('exit-lobby-btn').addEventListener('click', function () {
+  const buttonContainer = document.getElementById('button-container');
+  const surrenderContainer = document.getElementById('surrender-container');
+  
+  // Hide the initial button container
+  buttonContainer.style.opacity = '0';
+  buttonContainer.style.transform = 'translateY(-100%)';
+  
+  // Show the surrender prompt after the transition
+  setTimeout(() => {
+    buttonContainer.style.display = 'none'; // Hide the original buttons
+    surrenderContainer.style.display = 'flex';
+    surrenderContainer.classList.add('show'); // Slide in the surrender text
+  }, 500); // Match the transition duration
+});
+
+// Event listener for 'No' button (cancel surrender)
+document.getElementById('cancel-surrender-btn').addEventListener('click', function () {
+  const buttonContainer = document.getElementById('button-container');
+  const surrenderContainer = document.getElementById('surrender-container');
+  
+  // Hide the surrender prompt
+  surrenderContainer.classList.remove('show');
+  
+  // Show the original buttons again
+  setTimeout(() => {
+    surrenderContainer.style.display = 'none';
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.opacity = '1';
+    buttonContainer.style.transform = 'translateY(0)';
+  }, 500); // Match the transition duration
+});
+document.getElementById('continue-btn').addEventListener('click', function () {
+  const escoverlay = document.getElementById('escoverlay');
+  escoverlay.classList.remove('show'); // Hide the overlay
+});
+
+
+document.getElementById('toggle-fullscreen').addEventListener('click', function() {
+    var problemSection = document.querySelector('.problem-section');
+    var blurBackground = document.querySelector('.blur-background');
+    problemSection.classList.toggle('fullscreen-mode');
+    blurBackground.classList.toggle('active'); // 클래스를 토글
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        toggleEscOverlay();
+    }
+});
+function toggleEscOverlay() {
+    const escoverlay = document.getElementById('escoverlay');
+    if (escoverlay.classList.contains('show')) {
+        escoverlay.classList.remove('show'); // Hide the overlay
+        escoverlay.style.display = 'none';
+    } else {
+        escoverlay.classList.add('show'); // Show the overlay
+        escoverlay.style.display = 'flex';
+    }
+}
+
+
+
+// 선택된 클래스를 'warden'으로 설정하고 그 값을 'toolkit' 요소의 innerHTML로 업데이트
+let selectedClass = 'viper';
+document.getElementById('toolkit').innerHTML = selectedClass.toUpperCase();
+
+let currentSkillPoints = 9;
+
+const submitlockdowntime = 20;  
+const decaytime = 10;
+const toxic_cloudtime = 20;
+let countdownDuration = 8000; 
+let isSkillLocked = false; 
+
+
+let isDeleting = false; 
+let countdownStartTime; 
+
+let countdownInterval;
+let decayInterval;
+let currentMathProblem;
+let codeDeletionInterval;
+
+
+
+const skillCost = {
+    'disable_submit': 5,
+    'disable_typing': 1,
+    /////
+    'decay': 7,
+    'toxic_cloud': 3
+};
+
+const maxSkillPoints = 10; // 최대 스킬 포인트
+const timeInterval = 5 * 60 * 1000; // 5분 (밀리초 단위)
+let nextSkillTime = new Date().getTime() + timeInterval; // 현재 시간에서 5분 후
+
+// 스킬포인트 타이머 업데이트 함수
+function updateSkillPointTimer() {
+    const currentTime = new Date().getTime();
+    const timeRemaining = nextSkillTime - currentTime; // 남은 시간 계산
+
+    if (timeRemaining > 0) {
+        const minutes = Math.floor(timeRemaining / 1000 / 60);
+        const seconds = Math.floor((timeRemaining / 1000) % 60);
+        const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        document.getElementById("skillpointdrop").textContent = formattedTime;
+    } else {
+        // 5분이 지나면 스킬 포인트 하나 증가
+        if (currentSkillPoints < maxSkillPoints) {
+            currentSkillPoints++;
+            console.log(`Skill Points: ${currentSkillPoints}`);
+            updateSkillPointsUI(); // 스킬 포인트 UI 업데이트
+        }
+        nextSkillTime = new Date().getTime() + timeInterval; // 타이머를 다시 5분 후로 설정
+    }
+}
+
+
+// 1초마다 타이머 업데이트
+setInterval(updateSkillPointTimer, 1000);
+
+function updateSkillBar() {
+    const wardenSkillBar = document.getElementById('warden-skill-bar');
+    const viperSkillBar = document.getElementById('viper-skill-bar');
+
+    if (selectedClass === 'warden') {
+        wardenSkillBar.style.display = 'flex';
+        viperSkillBar.style.display = 'none';
+    } else if (selectedClass === 'viper') { 
+        wardenSkillBar.style.display = 'none';
+        viperSkillBar.style.display = 'flex';
+    }
+}
+
+function selectClass(newClass) {
+    selectedClass = newClass;
+    updateSkillBar();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateSkillBar();
+});
+
+
+var socket = io.connect('http://127.0.0.1:5000');
+
+var client_id = prompt("Please enter your ID:");
+
+if (client_id) {
+    socket.emit('register', {
+        client_id: client_id
+    });
+    alert("You have entered ID: " + client_id);
+}
+document.getElementById('my-name').textContent = client_id;
+socket.on('opponent_found', function(data) {
+    document.getElementById('opponent-player').innerHTML = data.opponent_id;
+});
+function updateFontSizeBasedOnCount(myCount, opponentCount) {
+    const myCharacterElement = document.getElementById('my-character-count');
+    const opponentCharacterElement = document.getElementById('opponent-character-count');
+
+    // 기본 스타일 초기화
+    myCharacterElement.style.fontWeight = 'normal';
+    opponentCharacterElement.style.fontWeight = 'normal';
+
+    // 더 큰 쪽에 큰 폰트 및 굵은 글씨 적용
+    if (myCount > opponentCount) {
+        myCharacterElement.style.fontWeight = 'bold';
+    } else if (opponentCount > myCount) {
+        opponentCharacterElement.style.fontWeight = 'bold';
+    }
+}
+
+// 주석과 공백을 제외한 유효한 글자 수 계산 함수
+function countValidCharacters(code) {
+    // 주석 제거
+    code = code.replace(/\/\*[\s\S]*?\*\//g, ''); // C, C++, Java 등 다중 주석 제거
+    code = code.replace(/\/\/.*/g, ''); // 한 줄 주석 제거
+    code = code.replace(/#.*$/gm, ''); // Python 주석 제거
+
+    // 공백과 엔터 제거
+    code = code.replace(/\s/g, '');
+
+    return code.length; // 남은 문자의 길이 반환
+}
+
+// 0.3초마다 내 유효한 문자 수를 계산하고 상대방에게 전송
+let myCharacterCount = 0;
+let opponentCharacterCount = 0;
+// 기존 에디터 설정 후 추가
+// 글자 수 업데이트 함수 수정
+editor.on('change', function () {
+    const code = editor.getValue();  // 에디터에서 코드를 가져옴
+    myCharacterCount = countValidCharacters(code);
+
+    // 내 유효 문자 수를 화면에 업데이트
+    const myCharacterElement = document.getElementById('my-character-count');
+    myCharacterElement.innerText = `${myCharacterCount}`;
+
+    // 애니메이션 클래스 추가
+    myCharacterElement.classList.add('animate-count');
+
+    // 애니메이션 후 클래스 제거
+    setTimeout(() => {
+        myCharacterElement.classList.remove('animate-count');
+    }, 300);  // 애니메이션 길이와 일치하는 타이머 설정
+
+    console.log(`Sending my valid character count: ${myCharacterCount}`);
+
+    // 서버로 내 유효 문자 수 전송
+    socket.emit('character_count', {
+        sender_id: client_id,
+        character_count: myCharacterCount
+    });
+
+    // 내 글자수와 상대방 글자수 비교 후 폰트 업데이트
+    updateFontSizeBasedOnCount(myCharacterCount, opponentCharacterCount);
+});
+
+
+// 상대방의 유효 문자 수 수신 및 화면에 표시
+// 상대방의 유효 문자 수 수신 및 화면에 표시
+socket.on('opponent_character_count', function(data) {
+    opponentCharacterCount = data.character_count;
+
+    // 상대방의 유효 문자 수를 화면에 업데이트
+    const opponentCharacterElement = document.getElementById('opponent-character-count');
+    opponentCharacterElement.innerText = `${opponentCharacterCount}`;
+
+    // 애니메이션 클래스 추가
+    opponentCharacterElement.classList.add('animate-count');
+
+    // 애니메이션 후 클래스 제거
+    setTimeout(() => {
+        opponentCharacterElement.classList.remove('animate-count');
+    }, 300);  // 애니메이션 길이와 일치하는 타이머 설정
+
+    // 내 글자수와 상대방 글자수 비교 후 폰트 업데이트
+    updateFontSizeBasedOnCount(myCharacterCount, opponentCharacterCount);
+});
+
+
+// 클라이언트가 서버로부터 승리/패배 메시지를 받았을 때 처리하는 부분
+socket.on('test_result_notification', function(data) {
+    console.log('Notification received:', data.message);
+    
+    // 서버로부터 'You Won!' 또는 'You Lose!' 메시지를 받으면 화면에 표시
+    if (data.message === "You Won!") {
+        showRoundEndEffect(true);  // 승리 화면
+    } else if (data.message === "You Lose!") {
+        showRoundEndEffect(false);  // 패배 화면
+    }
+});
+function resetAnimation(element) {
+    // 강제로 애니메이션을 다시 시작하기 위해 class를 제거하고 다시 추가합니다.
+    element.style.animation = 'none'; // 애니메이션 중지
+    void element.offsetWidth; // 트릭: 리플로우를 강제하여 애니메이션을 재시작
+    element.style.animation = ''; // 애니메이션 다시 활성화
+}
+
+
+function showRoundEndEffect(isWin) {
+    const roundEndScreen = document.getElementById('roundendScreen');
+    const resultText = document.getElementById('resultText');
+    const text = isWin ? "ROUND SECURED" : "ROUND LOST";
+
+    resultText.classList.remove('win', 'lose', 'active', 'exit');
+    resultText.classList.add(isWin ? 'win' : 'lose');
+    
+    // 글자를 추가하기 전에 초기화
+    resultText.innerHTML = '';
+
+    // 각 글자에 대해 애니메이션을 적용하면서 한 글자씩 출력
+    text.split('').forEach((char, index) => {
+        const span = document.createElement('span');
+        if (char === ' ') {
+            span.classList.add('space');
+        } else {
+            span.textContent = char;
+            span.classList.add('letter');
+            span.style.animationDelay = `${index * 0.1}s`;
+        }
+        resultText.appendChild(span);
+        
+        // 애니메이션 강제 재시작
+        resetAnimation(span);
+    });
+
+    const countdownElement = document.createElement('div');
+    countdownElement.id = 'countdown';
+    countdownElement.style.fontSize = '2rem';
+    countdownElement.style.color = '#fff';
+    countdownElement.style.marginTop = '20px';
+    resultText.appendChild(countdownElement);
+
+    roundEndScreen.style.display = 'flex';
+    roundEndScreen.classList.add('active');
+    roundEndScreen.style.zIndex = '100';
+
+    let countdown = 4;
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown < 0) {
+            clearInterval(countdownInterval);
+            hideRoundEndEffect();
+        }
+    }, 1000);
+}
+
+
+function hideRoundEndEffect() {
+    const roundEndScreen = document.getElementById('roundendScreen');
+    const resultText = document.getElementById('resultText');
+    const countdownElement = document.getElementById('countdown');
+
+    // Add new screen for countdown
+    const newScreen = document.createElement('div');
+    newScreen.classList.add('new-screen');
+    newScreen.innerHTML = `
+        <div class='new-content'>
+            <p class="semititle">Next round starts in</p>
+            <p><span id="countdown">50</span></p>
+        </div>`;
+    document.body.appendChild(newScreen);
+
+    let countdown = 50;
+    const countdownTimer = setInterval(() => {
+        if (countdown > 0) {
+            countdown--;
+            document.getElementById('countdown').textContent = countdown;
+        } else {
+            clearInterval(countdownTimer);
+        }
+    }, 1000);
+
+    if (countdownElement) {
+        countdownElement.remove();
+    }
+
+    // Slide down the new screen, then reset after the countdown ends
+    newScreen.classList.add('slide-down');
+
+    setTimeout(() => {
+        newScreen.classList.add('slide-down');
+        setTimeout(() => {
+            newScreen.remove(); // Remove new screen after sliding down
+
+            // Reset the editor, logs, and other elements
+            resetForNextRound();
+
+            roundEndScreen.style.zIndex = '-1';
+            roundEndScreen.style.display = 'none';
+        }, 2000); // Extra delay for sliding effect
+
+    }, 50000); // 50 seconds delay before removing the new screen
+}
+function resetForNextRound() {
+    // Reset CodeMirror editor content
+    submitCount = 5;
+    document.getElementById("submit-count-display").innerText = `${submitCount}`;
+
+    if (window.editor) {
+        editor.setValue(''); // This clears the editor content
+        editor.clearHistory(); // This clears the undo history
+    }
+
+    // Clear submission logs
+    const resultsContainer = document.getElementById('results-container');
+    while (resultsContainer.firstChild) {
+        resultsContainer.removeChild(resultsContainer.firstChild);
+    }
+
+    // Reset skill points or any counters
+    currentSkillPoints = 0;
+    updateSkillPointsUI();
+
+    // Remove any active debuff or temporary UI components
+    const debuffContainer = document.getElementById('debuff-container');
+    while (debuffContainer.firstChild) {
+        debuffContainer.removeChild(debuffContainer.firstChild);
+    }
+
+    // Reset round status indicators
+    const roundStatusElements = document.querySelectorAll('.status');
+    roundStatusElements.forEach((status) => {
+        status.classList.remove('win', 'lose', 'miss');
+    });
+
+    // ** Reset submitted-log color to default **
+    const submittedLogTab = document.querySelector('.submitted-log');
+    if (submittedLogTab) {
+        submittedLogTab.style.color = ''; // Reset the color back to the default
+    }
+    resetTemporaryEffects();
+
+    // Ensure animations restart correctly
+    restartAnimations();
+}
+
+// Example function to reset temporary effects or visual overlays
+function resetTemporaryEffects() {
+    // Remove any overlays, blur effects, or other temporary elements
+    const toxic_cloudOverlay = document.querySelector('.toxic_cloud-blur');
+    if (toxic_cloudOverlay) {
+        toxic_cloudOverlay.remove();
+    }
+
+    // Reset any glow or other visual effects applied to the body
+    document.body.style.filter = 'none';
+    document.body.classList.remove('glowing-inset-border');
+}
+
+// Ensure animations restart correctly
+function restartAnimations() {
+    const roundEndScreen = document.getElementById('roundendScreen');
+    roundEndScreen.style.animation = 'none'; // Reset animation
+    void roundEndScreen.offsetWidth; // Force reflow
+    roundEndScreen.style.animation = ''; // Restart animation
+}
+
+
+
+// 제출 버튼 클릭 시 실행되는 함수
+// 제출 버튼 클릭 시 실행되는 함수
+document.getElementById("submit-all").addEventListener("click", function() {
+    // 제출 기회가 1 이상일 경우에만 제출 실행
+    if (submitCount > 0) {
+        const code = editor.getValue();
+        const language = document.getElementById("language-selector").value;
+
+        console.log('Submitting code:', code, 'in', language);
+
+        socket.emit('submit_code', {
+            sender_id: client_id,
+            code: code,
+            language: language
+        });
+
+        // 제출 횟수 감소 및 UI 갱신
+        submitCount--;
+        updateSubmitCountUI(); // 제출 기회 UI 업데이트
+
+        // 제출 기회가 0이 되었을 때 제출 버튼 비활성화
+        if (submitCount === 0) {
+            const submitButton = document.getElementById("submit-all");
+            submitButton.disabled = true;
+            submitButton.style.opacity = 0.5;
+            submitButton.style.cursor = 'not-allowed';
+        }
+
+        let timeLeft = 1; // 1초 대기 타이머
+        const submitButton = document.getElementById("submit-all");
+        submitButton.textContent = `Delay: ${timeLeft}s`; // 버튼 텍스트를 타이머로 변경
+
+        // 1초 후 버튼 텍스트 원상복구
+        setTimeout(function() {
+            submitButton.textContent = "Submit";
+        }, 1000);
+
+    } else {
+        console.log('No more submit attempts left.');
+        // 제출 기회가 없으면 메시지를 출력할 수 있음
+    }
+});
+
+// 제출 기회 UI 업데이트 함수
+function updateSubmitCountUI() {
+    document.getElementById("submit-count-display").textContent = `${submitCount}`;
+
+    // 남은 제출 기회가 없으면 알림을 표시할 수 있음
+    if (submitCount === 0) {
+        console.log('No more submit attempts left.');
+    }
+}
+
+
+const funMessages = [
+    "Oops! Looks like someone bit the dust!",
+    "Oh no! The code gods are not pleased.",
+    "Mission failed, we’ll get them next time!",
+    "Error 404: Correct answer not found!",
+    "Almost there... but not quite!",
+    "The opponent's code exploded! Kaboom!",
+    "Well, that didn’t go as planned, did it?",
+    "Close, but no cigar for your opponent.",
+    "Opponent has fallen in battle! Try again!"
+];
+
+function getRandomMessage() {
+    return funMessages[Math.floor(Math.random() * funMessages.length)];
+}
+
+socket.on('submission_log', function(data) {
+
+    if (data.sender !== client_id) {
+        const resultsContainer = document.getElementById('results-container');
+
+        const randomMessage = getRandomMessage();
+
+        const submissionEntry = document.createElement('div');
+        submissionEntry.className = 'submission-entry';
+        submissionEntry.innerHTML = `
+            <div class="testcase-box" style="background-color:#ECB666;">${randomMessage}</div>
+        `;
+
+        resultsContainer.appendChild(submissionEntry);
+
+        const submittedLogTab = document.querySelector('.submitted-log');
+        submittedLogTab.style.color = "red";
+
+        submittedLogTab.addEventListener('click', function() {
+            if (submittedLogTab.style.color === "red") {
+                submittedLogTab.style.color = "";
+            }
+        });
+    }
+});
+
+function updateSkillPointsUI() {
+    const totalStatusDots = document.querySelectorAll('#total-status-dot .status-dot');
+
+    totalStatusDots.forEach((dot, index) => {
+        if (index < currentSkillPoints) {
+            dot.style.backgroundColor = 'white';
+        } else {
+            dot.style.backgroundColor = 'gray';
+        }
+    });
+
+    const flashbangSkillIcon = document.getElementById('flashbang-icon');
+    const flashbangStatusDot = document.querySelector('#flashbang-status-dot .status-dot');
+
+    if (currentSkillPoints >= skillCost['disable_typing']) {
+        flashbangSkillIcon.classList.remove('disabled');
+        flashbangStatusDot.style.backgroundColor = 'white';
+    } else {
+        flashbangSkillIcon.classList.add('disabled');
+        flashbangStatusDot.style.backgroundColor = 'gray';
+    }
+
+    const lockdownSkillIcon = document.getElementById('lockdown-icon');
+    const lockdownStatusDots = document.querySelectorAll('#lockdown-status-dot .status-dot');
+
+    lockdownStatusDots.forEach((dot, index) => {
+        if (index < currentSkillPoints) {
+            dot.style.backgroundColor = 'white';
+        } else {
+            dot.style.backgroundColor = 'gray';
+        }
+    });
+
+    if (currentSkillPoints >= skillCost['disable_submit']) {
+        lockdownSkillIcon.classList.remove('disabled');
+    } else {
+        lockdownSkillIcon.classList.add('disabled');
+    }
+
+
+    const decaySkillIcon = document.getElementById('decay-icon');
+    const decayStatusDots = document.querySelectorAll('#decay-status-dot .status-dot');
+
+    decayStatusDots.forEach((dot, index) => {
+        if (index < currentSkillPoints) {
+            dot.style.backgroundColor = 'white';
+        } else {
+            dot.style.backgroundColor = 'gray';
+        }
+    });
+
+    if (currentSkillPoints >= skillCost['decay']) {
+        decaySkillIcon.classList.remove('disabled');
+    } else {
+        decaySkillIcon.classList.add('disabled');
+    }
+
+    const toxic_cloudSkillIcon = document.getElementById('toxic_cloud-icon');
+    const toxic_cloudStatusDots = document.querySelectorAll('#toxic_cloud-status-dot .status-dot');
+
+    toxic_cloudStatusDots.forEach((dot, index) => {
+        if (index < currentSkillPoints) {
+            dot.style.backgroundColor = 'white';
+        } else {
+            dot.style.backgroundColor = 'gray';
+        }
+    });
+
+    if (currentSkillPoints >= skillCost['toxic_cloud']) {
+        toxic_cloudSkillIcon.classList.remove('disabled');
+    } else {
+        toxic_cloudSkillIcon.classList.add('disabled');
+    }
+
+    console.log(`Current skill points: ${currentSkillPoints}`);
+}
+
+updateSkillPointsUI();
+
+function useSkill(skillType) {
+    if (isSkillLocked) {
+        console.log("Skills are currently locked due to 'disable_submit'.");
+        return; // Prevent using any skill while locked
+    }
+
+    const skillIcon = document.querySelector(`.skill-icon[onclick="useSkill('${skillType}')"]`);
+
+    if (skillIcon.classList.contains('disabled')) {
+        return; // Skill is already disabled
+    }
+
+    const cost = skillCost[skillType];
+    if (currentSkillPoints < cost) {
+        return; // Not enough skill points
+    }
+
+    currentSkillPoints -= cost;
+    updateSkillPointsUI();
+
+    socket.emit('use_skill', {
+        sender_id: client_id,
+        skill_type: skillType
+    });
+
+    skillIcon.classList.add('disabled');
+
+    let duration;
+    if (skillType === 'disable_submit') {
+        duration = submitlockdowntime;
+        isSkillLocked = true; // Lock all skills when 'disable_submit' is active
+    } else if (skillType === 'disable_typing') {
+        duration = 10;
+    } else if (skillType === 'decay') {
+        duration = 10;
+    } else if (skillType === 'toxic_cloud') {
+        duration = toxic_cloudtime;
+    }
+
+    startSkillTimer(skillType, duration, skillIcon);
+}
+
+function startSkillTimer(skillType, duration, skillIcon) {
+    const timerElement = document.getElementById(`${skillType}_timer`);
+    let remainingTime = duration;
+
+    const updateTimer = () => {
+        if (remainingTime > 0) {
+            timerElement.textContent = `남은 시간: ${remainingTime}s`;
+            remainingTime--;
+        } else {
+            timerElement.textContent = '';
+            clearInterval(timerInterval);
+
+            if (skillType === 'disable_submit' && currentSkillPoints >= skillCost['disable_submit']) {
+                skillIcon.classList.remove('disabled'); // Unlock skills after 'disable_submit' duration ends
+            } else if (skillType === 'disable_typing' && currentSkillPoints >= skillCost['disable_typing']) {
+                skillIcon.classList.remove('disabled');
+            } else if (skillType === 'decay' && currentSkillPoints >= skillCost['decay']) {
+                skillIcon.classList.remove('disabled');
+            } else if (skillType === 'toxic_cloud' && currentSkillPoints >= skillCost['toxic_cloud']) {
+                skillIcon.classList.remove('disabled');
+            }
+
+            if (skillType === 'disable_submit') {
+                isSkillLocked = false; // Unlock skills after 'disable_submit' duration ends
+            }
+        }
+    };
+
+    updateTimer(); // Initialize timer display
+    const timerInterval = setInterval(updateTimer, 1000); // Update every second
+}
+
+/*
+function rechargeSkillPoints() {
+const maxPoints = 7;
+if (currentSkillPoints < maxPoints) {
+    currentSkillPoints++;
+    updateSkillPointsUI();
+}
+}
+
+setInterval(rechargeSkillPoints, 5000);  
+    */
+socket.on('skill_effect', function(data) {
+    if (data.skill === 'disable_typing' && data.status === 'active') {
+        handleDisableTyping(); // 섬광탄 스킬 처리
+    } else if (data.skill === 'disable_submit' && data.status === 'active') {
+        handleDisableSubmit(); // 제출 금지 스킬 처리
+    }
+    if (data.skill === 'decay' && data.status === 'active') {
+    startDecayEffect();
+} else if (data.skill === 'decay' && data.status === 'inactive') {
+    stopDecayEffect();
+}
+if (data.skill === 'toxic_cloud' && data.status === 'active') {
+    activatetoxic_cloud(20);
+} else if (data.skill === 'toxic_cloud' && data.status === 'inactive') {
+    deactivatetoxic_cloud();
+}
+});
+
+function handleDisableTyping() {
+    const stunOverlay = document.getElementById('stunoverlay');
+    const countdownTimer = document.getElementById('countdown-timer');
+
+    // 기존의 타이머와 애니메이션을 초기화
+    if (window.stunTimeout1) clearTimeout(window.stunTimeout1);
+    if (window.stunTimeout2) clearTimeout(window.stunTimeout2);
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+
+    // 초기 상태 설정
+    stunOverlay.style.display = 'block';
+    countdownTimer.style.display = 'block';
+
+    let stunDuration = 5;
+    countdownTimer.textContent = `Stun ends in: ${stunDuration}s`;
+
+    // 새로운 카운트다운 타이머 설정
+    window.countdownInterval = setInterval(() => {
+        stunDuration--;
+        if (stunDuration > 0) {
+            countdownTimer.textContent = `Stun ends in: ${stunDuration}s`;
+        } else {
+            clearInterval(window.countdownInterval);
+            stunOverlay.style.display = 'none';
+            countdownTimer.style.display = 'none';
+        }
+    }, 1000);
+
+    // 섬광탄 효과 (화면 밝기 증가)
+    window.stunTimeout1 = setTimeout(() => {
+        stunOverlay.style.animation = 'flashBangEffect 0.5s forwards';
+    }, 0); // 즉시 섬광 애니메이션 발생
+
+    // 시야 왜곡 및 모션 블러 효과 추가
+    window.stunTimeout2 = setTimeout(() => {
+        stunOverlay.style.animation = 'flashBangEffect 0.5s forwards, motionBlur 3s forwards';
+    }, 500); // 섬광 후 시야 왜곡 및 흐림 효과 발생
+
+    // 섬광탄 효과 종료 (화면 복구)
+    window.stunTimeout3 = setTimeout(() => {
+        stunOverlay.style.animation = 'fadeBackIn 1s forwards';
+        stunOverlay.style.display = 'none';
+    }, 5000); // 5초 후 효과 종료
+}
+
+function handleDisableSubmit() {
+    const bodyElement = document.body;
+    bodyElement.classList.add('glowing-inset-border');
+
+    const submitButton = document.getElementById('submit-all');
+    submitButton.disabled = true;
+    submitButton.style.opacity = 0.5;
+
+    const testButton = document.querySelector("button[onclick='runCode()']");
+    testButton.disabled = true;
+    testButton.style.opacity = 0.5;
+
+    const skillIcons = document.querySelectorAll('.skill-icon');
+    skillIcons.forEach(icon => {
+        icon.classList.add('disabled');
+    });
+
+    let disableDuration = submitlockdowntime;
+    setTimeout(() => {
+        bodyElement.classList.remove('glowing-inset-border');
+        submitButton.disabled = false;
+        submitButton.style.opacity = 1;
+
+        testButton.disabled = false;
+        testButton.style.opacity = 1;
+        skillIcons.forEach(icon => {
+            icon.classList.remove('disabled');
+        });
+    }, disableDuration * 1000);
+}
+
+let activeDebuffs = {};
+
+socket.on('skill_effect', function(data) {
+    if (data.status === 'active') {
+        const debuffName = data.skill;
+
+        if (activeDebuffs[debuffName]) return;
+
+        let debuffDuration;
+
+        if (debuffName === 'disable_submit') {
+            debuffDuration = submitlockdowntime;
+
+        } else if (debuffName === 'disable_typing') {
+            debuffDuration = 5;
+        } else if (debuffName === 'decay') {
+            debuffDuration = 0;
+        } else if (debuffName === 'toxic_cloud') {
+            debuffDuration = 20;
+        }
+        const debuffStartTime = new Date().getTime();
+        const debuffEndTime = debuffStartTime + (debuffDuration * 1000);
+
+        const debuffBox = document.createElement('div');
+        debuffBox.classList.add('debuff-box');
+        debuffBox.id = `debuff-${debuffName}`;
+
+        debuffBox.innerHTML = `
+            <div class="circle-container">
+                <svg width="50" height="50">
+                    <circle class="circle-background" cx="25" cy="25" r="20"></circle>
+                    <circle class="circle-foreground" cx="25" cy="25" r="20" id="circle-${debuffName}"></circle>
+                </svg>
+            </div>
+            <div class="debuff-timer">${debuffName.replace('_', ' ').toUpperCase()}</div>
+        `;
+        document.getElementById('debuff-container').appendChild(debuffBox);
+
+        const initialDuration = debuffDuration * 1000;
+
+        function updateCircle() {
+            const circle = document.getElementById(`circle-${debuffName}`);
+            const circumference = 2 * Math.PI * 20;
+            const currentTime = new Date().getTime();
+            const remainingTime = Math.max(debuffEndTime - currentTime, 0);
+            const offset = circumference - (remainingTime / initialDuration) * circumference;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = offset;
+
+            if (remainingTime <= 0) {
+                removeDebuff(debuffName);
+            }
+        }
+
+        activeDebuffs[debuffName] = setInterval(updateCircle, 100);
+
+        function removeDebuff(debuffName) {
+            clearInterval(activeDebuffs[debuffName]);
+            delete activeDebuffs[debuffName];
+
+            const debuffBox = document.getElementById(`debuff-${debuffName}`);
+            if (debuffBox) {
+                debuffBox.classList.add('hidden');
+                setTimeout(() => debuffBox.remove(), 1000);
+            }
+        }
+
+        if (debuffName === 'disable_submit') {
+            const bodyElement = document.body;
+            bodyElement.classList.add('glowing-inset-border');
+
+            const submitButton = document.getElementById('submit-all');
+            const testButton = document.querySelector("button[onclick='runCode()']");
+            submitButton.disabled = true;
+            testButton.disabled = true;
+            submitButton.style.opacity = 0.5;
+            testButton.style.opacity = 0.5;
+
+            setTimeout(() => {
+                bodyElement.classList.remove('glowing-inset-border');
+                submitButton.disabled = false;
+                testButton.disabled = false;
+                submitButton.style.opacity = 1;
+                testButton.style.opacity = 1;
+            }, debuffDuration * 1000);
+        }
+    }
+});
+
+function generateMathProblem() {
+    const num1 = Math.floor(Math.random() * 1000) + 1;
+    const num2 = Math.floor(Math.random() * 100) + 1;
+    const operations = ['+', '-'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+
+    const question = `${num1} ${operation} ${num2}`;
+    const correctAnswer = eval(question); // 간단한 예제를 위해 eval 사용
+
+    return {
+        question,
+        correctAnswer
+    };
+}
+
+function showMathProblem() {
+    resetTimer(); // 타이머 초기화
+    currentMathProblem = generateMathProblem();
+    document.getElementById('math-problem-question').innerText = `${currentMathProblem.question}`;
+    document.getElementById('math-problem-modal').style.display = 'block';
+    startCountdownTimer(); // 타이머 시작
+}
+
+function startCodeDeletion() {
+    if (!isDeleting) {
+        isDeleting = true; // 삭제 상태 활성화
+        codeDeletionInterval = setInterval(() => {
+            let code = editor.getValue();
+
+            // 다양한 언어의 주석 제거
+            let codeWithoutComments = code
+                // 한 줄 주석 (C, C++, Java, JavaScript, Python에서 # 또는 // 로 시작하는 주석)
+                .replace(/#.*|\/\/.*|\/\*[\s\S]*?\*\//g, '')
+                // 여러 줄 주석 (C, C++, Java, JavaScript 등에서 /* */ 주석)
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                // Python의 ''' ''' 또는 """ """ 여러 줄 주석
+                .replace(/('''[\s\S]*?'''|"""[\s\S]*?""")/g, '');
+
+            // 공백 문자(탭, 개행, 스페이스) 제거
+            let codeWithoutWhitespace = codeWithoutComments.replace(/\s+/g, '');
+
+            if (codeWithoutWhitespace.length > 0) {
+                // 삭제할 문자를 주석과 공백을 제외한 코드에서 선택
+                const randomIndex = Math.floor(Math.random() * codeWithoutWhitespace.length);
+                const charToDelete = codeWithoutWhitespace[randomIndex];
+
+                // 원래 코드에서 해당 문자를 찾아 삭제
+                let firstOccurrenceIndex = code.indexOf(charToDelete);
+                if (firstOccurrenceIndex !== -1) {
+                    code = code.slice(0, firstOccurrenceIndex) + code.slice(firstOccurrenceIndex + 1);
+                    editor.setValue(code); // 에디터 내용 업데이트
+                }
+
+                editor.clearHistory(); // 삭제 후 undo 스택 비우기 (Ctrl+Z 복구 방지)
+            } else {
+                clearInterval(codeDeletionInterval); // 모든 코드가 삭제되면 타이머 종료
+            }
+        }, 1000); // 1초에 1글자 삭제
+    }
+
+
+}
+
+function stopCodeDeletion() {
+    clearInterval(codeDeletionInterval);
+    isDeleting = false; // 삭제 상태 종료
+}
+
+let isMathProblemSolved = false; // 수학 문제 해결 여부를 추적하는 변수
+let decayActive = false; // decay 효과가 활성화된 상태를 추적
+
+
+function startDecayEffect() {
+
+    const ghostShadow = document.createElement('div');
+    ghostShadow.classList.add('ghost-shadow');
+    document.body.appendChild(ghostShadow);
+
+    const bodyElement = document.body;
+    decayActive = true; // decay 활성화
+    isMathProblemSolved = false; // 시작할 때는 문제 해결되지 않은 상태로 초기화
+    if (!isDeleting) { // 삭제 중이 아니라면 문제 출제
+        showMathProblem();
+        startCodeDeletion();
+    }
+
+    decayInterval = setInterval(() => {
+        if (!isMathProblemSolved && !isDeleting) { // 문제를 풀지 않았고 삭제 중이 아니라면 문제 출제
+            showMathProblem();
+        }
+    }, 10000);
+}
+
+function stopDecayEffect() {
+    const bodyElement = document.body;
+    bodyElement.classList.remove('glowing-inset-border-green');
+    decayActive = false; // decay 비활성화
+    clearInterval(decayInterval);
+    stopCodeDeletion();
+    stopCountdownTimer();
+    document.getElementById('math-problem-modal').style.display = 'none';
+    document.getElementById('poisonInsetOverlay').style.display = 'none';
+
+    // decay 스킬 종료 후 아이콘 활성화
+    const decaySkillIcon = document.getElementById('decay-icon');
+    if (currentSkillPoints >= skillCost['decay']) {
+        decaySkillIcon.classList.remove('disabled');
+    }
+
+    const poisonOverlay = document.querySelector('.poison-inset-overlay');
+    const ghostEffect = document.querySelector('.ghost-shadow');
+        poisonOverlay.remove();
+
+    if (ghostEffect) {
+        ghostEffect.remove();
+    }
+}
+
+
+function submitMathProblem() {
+    const answer = parseFloat(document.getElementById('math-problem-answer').value);
+    document.getElementById('math-problem-answer').value = ''; // 답안 초기화
+
+    if (answer === currentMathProblem.correctAnswer) {
+        isMathProblemSolved = true; // 문제를 해결했음을 표시
+        document.getElementById('math-problem-modal').style.display = 'none';
+        stopDecayEffect(); // 문제를 풀면 삭제 중단 및 Decay 종료
+    } else {
+        if (!isDeleting) { // 이미 삭제 중인 경우 중복으로 삭제가 시작되지 않도록 방지
+            startCodeDeletion();
+        }
+        showMathProblem(); // 문제를 틀리면 새로운 문제 출제
+    }
+}
+
+
+
+function startCountdownTimer() {
+countdownStartTime = Date.now(); 
+updateTimerDisplay(countdownDuration); 
+clearInterval(countdownInterval); 
+
+countdownInterval = setInterval(() => {
+    const timeElapsed = Date.now() - countdownStartTime; 
+    const timeRemaining = Math.max(0, countdownDuration - timeElapsed); 
+
+    updateTimerDisplay(timeRemaining);
+
+    if (timeRemaining === 0) {
+        clearInterval(countdownInterval); 
+        startCodeDeletion(); 
+        showMathProblem(); 
+    }
+}, 100); 
+}
+
+function updateTimerDisplay(timeRemaining) {
+const secondsRemaining = Math.floor(timeRemaining / 1000); 
+document.getElementById('timer-display').innerText = `${secondsRemaining}`;
+}
+
+function stopCountdownTimer() {
+clearInterval(countdownInterval); 
+}
+
+function resetTimer() {
+countdownDuration = 10000; 
+updateTimerDisplay(countdownDuration); 
+}
+
+socket.on('skill_effect', function(data) {
+if (data.skill === 'decay' && data.status === 'active') {
+    startDecayEffect();
+} else if (data.skill === 'decay' && data.status === 'inactive') {
+    stopDecayEffect();
+}
+if (data.skill === 'toxic_cloud' && data.status === 'active') {
+    activatetoxic_cloud(20);
+} else if (data.skill === 'toxic_cloud' && data.status === 'inactive') {
+    deactivatetoxic_cloud();
+}
+});
+
+let blurLevel = 0; 
+const maxBlur = 20; 
+let blurTimeout; 
+
+function activatetoxic_cloud(duration) {
+if (istoxic_cloudActive) return; 
+istoxic_cloudActive = true;
+console.log("toxic_cloud Activated");
+
+const toxic_cloudOverlay = document.createElement('div');
+toxic_cloudOverlay.classList.add('toxic_cloud-blur');
+document.body.appendChild(toxic_cloudOverlay);
+
+const blurDots = [];
+
+for (let i = 0; i < 25; i++) {
+    const blurDot = document.createElement('div');
+    blurDot.classList.add('blur-dot');
+    blurDot.style.top = `${Math.random() * 70}vh`;
+    blurDot.style.left = `${Math.random() * 70}vw`;
+    toxic_cloudOverlay.appendChild(blurDot);
+    blurDots.push(blurDot); 
+
+    blurDot.addEventListener('mouseenter', function() {
+        handleMouseOver(blurDot); 
+    });
+}
+
+setTimeout(deactivatetoxic_cloud, duration * 1000);
+}
+
+function handleMouseOver(blurDot) {
+if (blurLevel < maxBlur) { 
+    blurLevel += 2; 
+    applyBlur(); 
+    blurDot.style.animation = 'fastExpand 1s forwards'; 
+}
+}
+
+function applyBlur() {
+document.body.style.filter = `blur(${blurLevel}px)`; 
+
+if (blurTimeout) clearTimeout(blurTimeout);
+blurTimeout = setTimeout(removeBlur, 20000); 
+}
+
+function removeBlur() {
+let currentBlur = blurLevel;
+
+const interval = setInterval(() => {
+    if (currentBlur > 0) {
+        currentBlur -= 1; 
+        document.body.style.filter = `blur(${currentBlur}px)`;
+    } else {
+        clearInterval(interval);
+        blurLevel = 0; 
+        document.body.style.filter = 'blur(0px)'; 
+    }
+}, 100); 
+}
+
+function deactivatetoxic_cloud() {
+istoxic_cloudActive = false;
+console.log("toxic_cloud Deactivated");
+
+const toxic_cloudOverlay = document.querySelector('.toxic_cloud-blur');
+if (toxic_cloudOverlay) {
+    toxic_cloudOverlay.remove();
+}
+
+document.getElementById('toxic_cloud-icon').classList.remove('disabled');
+}
+    </script>    
+
+</body>
+</html>

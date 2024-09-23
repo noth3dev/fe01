@@ -1,0 +1,87 @@
+/* 기본 편집기 배경 및 텍스트 스타일 */
+.cm-s-custom-dark-theme.CodeMirror {
+    background-color: #1c1c1c;  /* 어두운 배경 */
+    color: #dcdcdc;  /* 기본 텍스트는 부드러운 회색 */
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* 커서 스타일 */
+  .cm-s-custom-dark-theme .CodeMirror-cursor {
+    border-left: 2px solid #4563eb; /* 주 색상 커서 */
+  }
+  
+  /* 줄 번호 배경 */
+  .cm-s-custom-dark-theme .CodeMirror-gutters {
+    background-color: #2a2a2a; /* 어두운 줄 번호 배경 */
+    border-right: 1px solid #3c3c3c;  /* 줄 번호 경계 */
+  }
+  
+  /* 줄 번호 색상 */
+  .cm-s-custom-dark-theme .CodeMirror-linenumber {
+    color: #888888;  /* 줄 번호 색상 */
+  }
+  
+  /* 선택된 텍스트의 배경 */
+  .cm-s-custom-dark-theme .CodeMirror-selected {
+    background-color: rgba(69, 99, 235, 0.3);  /* 선택된 텍스트 배경 주 색상 */
+  }
+  
+  /* 활성화된 라인 배경 */
+  .cm-s-custom-dark-theme .CodeMirror-activeline-background {
+    background-color: rgba(69, 99, 235, 0.1);  /* 활성화된 줄의 배경 */
+  }
+  
+  /* 주석 텍스트 */
+  .cm-s-custom-dark-theme .cm-comment {
+    color: #757575;  /* 어두운 회색 */
+    font-style: italic;
+  }
+  
+  /* C/C++ 키워드 (예: int, char, void 등) */
+  .cm-s-custom-dark-theme .cm-keyword {
+    color: #c792ea;  /* 연보라색 키워드 */
+  }
+  
+  /* 함수명 */
+  .cm-s-custom-dark-theme .cm-def {
+    color: #82aaff;  /* 파란색 함수명 */
+  }
+  
+  /* 변수명 */
+  .cm-s-custom-dark-theme .cm-variable {
+    color: #82aaff;  /* 오렌지색 변수 */
+  }
+  
+  /* C 언어 라이브러리 (예: #include <stdio.h>) */
+  .cm-s-custom-dark-theme .cm-meta {
+    color: #89ddff;  /* 연한 파란색 메타(예: #include) */
+  }
+  
+  /* 숫자 */
+  .cm-s-custom-dark-theme .cm-number {
+    color: #f78c6c;  /* 연한 빨간색 숫자 */
+  }
+  
+  /* 연산자 및 기호 */
+  .cm-s-custom-dark-theme .cm-operator {
+    color: #89ddff;  /* 연한 파란색 연산자 */
+  }
+  
+  /* 브라켓(괄호) 및 중괄호 */
+  .cm-s-custom-dark-theme .cm-bracket {
+    color: #ffffff;  /* 흰색 괄호 */
+  }
+  
+  .cm-s-custom-dark-theme .cm-error {
+    color: #ff5370;
+    background-color: rgba(255, 83, 112, 0.1);  /* 연한 빨간 배경 */
+  }
+  
+  .cm-s-custom-dark-theme .cm-string {
+    color: #888888;  /* 회색 문자열 */
+  }
+
+  .cm-s-custom-dark-theme .CodeMirror-gutters {
+    border-right: none;  /* 윤곽선 제거 */
+  }
